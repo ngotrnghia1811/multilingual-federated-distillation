@@ -1,0 +1,39 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+env/
+venv/
+.env
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Data and model caches (keep data/README.md)
+data/*
+!data/README.md
+models/
+checkpoints/
+results/
+*.pth
+*.pt
+*.bin
+
+# HuggingFace / Datasets cache
+~/.cache/
+.cache/
+
+# Logs
+*.log
+nohup.out
+
+# macOS
+.DS_Store
