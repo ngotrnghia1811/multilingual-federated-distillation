@@ -1,0 +1,62 @@
+# FedAsync baseline — Base Setting
+# 6 clients, XLM-RoBERTa-Base
+# Fully asynchronous; server updates immediately on each client report
+
+clients:
+  type: simple
+  total_clients: 6
+  per_round: 6
+  do_test: true
+  speed_simulation: true
+  simulation_distribution:
+    distribution: uniform
+    low: 1
+    high: 240
+  max_sleep_time: 240
+  random_seed: 1
+
+server:
+  address: 127.0.0.1
+  port: 8103
+  staleness_bound: 1000
+  simulate_wall_time: false
+  synchronous: false
+  do_test: false
+  minimum_clients_aggregated: 1   # Fire immediately on any single client report
+  periodic_interval: 400
+  checkpoint_path: ./checkpoints/fedasync/base
+  model_path: ./models/fedasync/base
+
+data:
+  datasource: mlfd
+  dataset_name: xglue
+  dataset_config: xnli
+  label_list: contradiction, neutral, entailment
+  lang_list: ar, bg, de, el, es, fr, hi, ru, sw, th, tr, ur, vi, zh, en
+  partition_size: 1000
+  sampler: iid
+  random_seed: 9000
+
+trainer:
+  type: mlfd
+  rounds: 400
+  max_concurrency: 6
+  target_accuracy: 0.99
+  model_name: xlm-roberta-base
+  max_seq_len: 128
+  epochs: 1
+  batch_size: 4
+  optimizer: AdamW
+  reg_alpha: 0.0    # No KD in FedAsync
+
+algorithm:
+  type: fedavg
+
+parameters:
+  optimizer:
+    lr: 0.001
+    weight_decay: 0.01
+
+results:
+  result_path: ./results/fedasync_base/
+  types: round, elapsed_time, accuracy

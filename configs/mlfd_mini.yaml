@@ -1,0 +1,65 @@
+# MlFD — Mini Setting
+# 12 clients, 6 language groups, Multilingual-MiniLM-L12-H384
+# Reproduces the "mlfd_12_6_emb" row in Table 1 of the paper
+
+clients:
+  type: mlfd
+  total_clients: 12
+  per_round: 12
+  do_test: true
+  speed_simulation: true
+  simulation_distribution:
+    distribution: uniform
+    low: 1
+    high: 120          # Max sleep time for mMiniLM clients (seconds)
+  max_sleep_time: 120
+  random_seed: 1
+
+server:
+  address: 127.0.0.1
+  port: 8011
+  staleness_bound: 1000
+  simulate_wall_time: false
+  synchronous: false
+  do_test: false
+  global_model: false
+  global_embedding: true   # MlFD_emb: transmit word embeddings only
+  num_groups: 6            # One language group per tier
+  minimum_clients_aggregated: 2
+  periodic_interval: 20
+  checkpoint_path: ./checkpoints/mlfd/mini
+  model_path: ./models/mlfd/mini
+
+data:
+  datasource: mlfd
+  dataset_name: xglue
+  dataset_config: xnli
+  label_list: contradiction, neutral, entailment
+  lang_list: ar, bg, de, el, es, fr, hi, ru, sw, th, tr, ur, vi, zh, en
+  partition_size: 1000
+  sampler: iid
+  random_seed: 9000
+
+trainer:
+  type: mlfd
+  rounds: 400
+  max_concurrency: 8
+  target_accuracy: 0.99
+  model_name: Multilingual-MiniLM-L12-H384  # resolved to microsoft/Multilingual-MiniLM-L12-H384
+  max_seq_len: 128
+  epochs: 1
+  batch_size: 4
+  optimizer: AdamW
+  reg_alpha: 1.0
+
+algorithm:
+  type: fedavg
+
+parameters:
+  optimizer:
+    lr: 0.001
+    weight_decay: 0.01
+
+results:
+  result_path: ./results/mlfd_mini/
+  types: round, elapsed_time, accuracy

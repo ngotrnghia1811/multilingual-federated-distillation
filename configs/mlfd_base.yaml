@@ -1,0 +1,65 @@
+# MlFD — Base Setting
+# 6 clients, 3 language groups, XLM-RoBERTa-Base
+# Reproduces the "mlfd_6_3_emb" row in Table 1 of the paper
+
+clients:
+  type: mlfd
+  total_clients: 6
+  per_round: 6
+  do_test: true
+  speed_simulation: true
+  simulation_distribution:
+    distribution: uniform
+    low: 1
+    high: 240          # Max sleep time for XLMR clients (seconds)
+  max_sleep_time: 240
+  random_seed: 1
+
+server:
+  address: 127.0.0.1
+  port: 8010
+  staleness_bound: 1000
+  simulate_wall_time: false
+  synchronous: false
+  do_test: false
+  global_model: false
+  global_embedding: true   # MlFD_emb: transmit word embeddings only
+  num_groups: 3            # One language group per tier
+  minimum_clients_aggregated: 2
+  periodic_interval: 20
+  checkpoint_path: ./checkpoints/mlfd/base
+  model_path: ./models/mlfd/base
+
+data:
+  datasource: mlfd
+  dataset_name: xglue
+  dataset_config: xnli
+  label_list: contradiction, neutral, entailment
+  lang_list: ar, bg, de, el, es, fr, hi, ru, sw, th, tr, ur, vi, zh, en
+  partition_size: 1000
+  sampler: iid
+  random_seed: 9000
+
+trainer:
+  type: mlfd
+  rounds: 400
+  max_concurrency: 6
+  target_accuracy: 0.99
+  model_name: xlm-roberta-base
+  max_seq_len: 128
+  epochs: 1
+  batch_size: 4
+  optimizer: AdamW
+  reg_alpha: 1.0           # KD loss weight (lambda in the paper)
+
+algorithm:
+  type: fedavg
+
+parameters:
+  optimizer:
+    lr: 0.001
+    weight_decay: 0.01
+
+results:
+  result_path: ./results/mlfd_base/
+  types: round, elapsed_time, accuracy
