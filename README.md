@@ -1,20 +1,14 @@
-# MlFD
+# Multilingual Federated Distillation
 
-This repository contains the code for:
-
-**Multi-lingual Federated Distillation** \
-*Nghia Trung Ngo* \
-University of Oregon &nbsp;|&nbsp; [Paper](https://github.com/nghiatrngo/MlFD/blob/main/Multi_lingual_Federated_Distillation.pdf)
+A federated learning framework for multilingual NLP that tackles two problems at once: clients speaking different languages (data heterogeneity) and clients running on wildly different hardware (latency heterogeneity). Built as a graduate research project at the University of Oregon.
 
 ## Overview
 
-MlFD addresses the compound challenge of federated learning over multilingual NLP models, where clients exhibit both **data heterogeneity** (different languages) and **latency heterogeneity** (hardware and connectivity vary globally).
+Standard federated learning assumes clients are roughly homogeneous. In multilingual settings that assumption breaks — a client training on Chinese text has different vocabulary overlap, gradient directions, and often different hardware than one training on English. MlFD addresses this with three coordinated mechanisms:
 
-Three components work together:
-
-1. **Semi-asynchronous tier training** — Clients are grouped into language tiers. Intra-tier aggregation is synchronous (FedAvg), while cross-tier aggregation is asynchronous (FedAsync), matching the real-world assumption that same-language clients have similar latencies but different-language clients do not.
-2. **Personalized tokenizer** — Each client derives a vocabulary from its own data and uploads only the corresponding embedding rows. The server aggregates these sparse updates into the global multilingual embedding, reducing per-round payload from ~1 GB to <50 MB.
-3. **Federated distillation** — Per-label mean logit vectors are aggregated server-side and redistributed as KD soft targets, allowing clients to use lightweight local models while benefiting from cross-lingual knowledge sharing.
+1. **Semi-asynchronous tier training** — Clients are grouped into language tiers. Intra-tier aggregation is synchronous (FedAvg), while cross-tier aggregation is asynchronous (FedAsync). Same-language clients tend to have similar latencies; different-language clients don't, and the two-level design reflects that.
+2. **Personalized tokenizer** — Each client derives a vocabulary from its own data and uploads only the corresponding embedding rows. The server aggregates these sparse updates into the global multilingual embedding, reducing per-round payload from ~1 GB to under 50 MB.
+3. **Federated distillation** — Per-label mean logit vectors are aggregated server-side and redistributed as knowledge-distillation soft targets, letting clients use lightweight local models while still benefiting from cross-lingual knowledge sharing.
 
 ![Federated Learning convergence curves](docs/fl_progress.png)
 
@@ -23,7 +17,7 @@ Three components work together:
 ## Installation
 
 ```bash
-git clone https://github.com/nghiatrngo/MlFD.git
+git clone https://github.com/ngotrnghia1811/multilingual-federated-distillation
 cd multilingual-federated-distillation
 pip install -e .
 pip install -r requirements.txt
@@ -102,45 +96,12 @@ MlFD is the **fastest** method to converge and achieves **>90% reduction in comm
 
 In the **Mini setting** (mMiniLM, 82% embedding parameters), embedding aggregation is decisive: MlFD\_emb outperforms MlFD\_kd by **+11 accuracy points**. In the Base setting (XLMR, 69% embedding), the 31% encoder bottleneck limits the benefit of embedding aggregation alone.
 
-## Project Structure
-
-```
-multilingual-federated-distillation/
-├── mlfd/               # Core MlFD package
-│   ├── algorithm.py    # Personalized embedding extraction/scatter
-│   ├── client.py       # FL client: embedding upload, logit reception
-│   ├── data.py         # XNLI datasource with per-client language assignment
-│   ├── server.py       # Semi-async tier server: intra+cross-tier aggregation
-│   └── trainer.py      # KD training: LogitTracker, SampledHFTrainer
-├── baselines/          # Baseline FL methods
-│   ├── fedat.py        # FedAT server
-│   ├── feddistill.py   # FedDistill server (logit-only)
-│   └── fedasync.py     # FedAsync server
-├── configs/            # YAML experiment configurations
-├── scripts/            # Shell scripts to reproduce paper results
-├── data/               # Data acquisition instructions
-├── docs/               # Figures and supplementary material
-└── train.py            # Main entry point
-```
-
 ## Implementation Notes
 
 - Built on [Plato](https://github.com/TL-System/plato), an open-source FL research framework that provides the WebSocket-based client-server communication, wall-clock time simulation, and sampler infrastructure.
 - All MLLMs are initialized from HuggingFace pre-trained checkpoints.
 - The personalized vocabulary for each client is derived by collecting all unique `input_ids` from that client's local train and test splits after tokenization.
 
-## Citation
-
-```bibtex
-@techreport{ngo2022mlfd,
-  title     = {Multi-lingual Federated Learning},
-  author    = {Ngo, Nghia Trung},
-  institution = {University of Oregon},
-  year      = {2022},
-  note      = {Department of Computer Science}
-}
-```
-
 ## License
 
-Apache 2.0
+MIT
